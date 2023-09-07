@@ -1,0 +1,40 @@
+.global-banner {
+    .editFormWrapper {
+        @mixin create-card;
+
+        position: relative;
+        width: $bodyMinWidth;
+        margin: 0 auto $spacing;
+
+        .formWrapper {
+            padding: $spacing;
+
+            .banner-control-group {
+                max-width: 100% !important;
+
+                .banner-bg-color {
+                    justify-content: space-between;
+                    width: 175px;
+                    color: white;
+                    margin-bottom: 0;
+                    width: 150px;
+                    text-align: center;
+                    font-weight: bold;
+                    line-height: 34px;
+                    margin: -8px 0 0 5px;
+                }
+            }
+        }
+
+        .jmFormActions {
+            border-top: $borderLight;
+            height: $inputHeight;
+            padding: $spacing;
+            text-align: right;
+
+            > * {
+                min-width: 100px;
+            }
+        }
+    }
+}

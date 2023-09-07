@@ -1,0 +1,174 @@
+<%!
+    title = 'App Install'
+%>
+<%namespace name="lib" file="//lib.html" import="*"/>
+<%namespace name="helpers" file="//admin/_helpers.html"/>
+<%inherit file="//layout/admin.html" />
+<%
+    import splunk
+    from splunk.appserver.mrsparkle.lib import util, i18n
+
+    requireAppInspect = util.requireAppInspect()
+%>
+
+% if error:
+    <%helpers:message content="${error}" level="error"/>
+% endif
+
+<script language="JavaScript">
+    $(function() {
+        $('#installform').submit(function() {
+            $('button').attr('disabled', 'disabled');
+            $('.splButton-primary').text(${_('Processing...')|jsonify});
+            return true;
+        });
+        $('.splButton-secondary').click(function() {
+            window.location = ${jsonify(make_url(breadcrumbs[-2][1] if len(breadcrumbs)>1 else state['return_to']))};
+            return false;
+        });
+        $('.ack-checkbox').click(function() {
+            if($('.ack-checkbox').is(':checked')) {
+                $('.ack-checkbox').val(1)
+                $('.splButton-primary').removeAttr('disabled');
+            } else {
+                $('.ack-checkbox').val(0);
+                $('.splButton-primary').attr('disabled', 'disabled');
+            }
+        });
+    });
+</script>
+
+<div class="spl-gdi-wrapper spl-prompt-message-layout">
+    <h2 class="spl-page-hdr spl-no-icon-no-padding" >
+        <span> ${_('Install App From File')} </span>
+    </h2>
+
+	<div class="jmFormOptions">
+	    <span class="spl-hr-solid-lite"></span>
+	    <!-- start prompt message -->
+	    <form id="installform" method="post" action="${make_url(['/manager/appinstall/_upload'])}" enctype="multipart/form-data">
+	    <input type="hidden" name="state" value="${state.serialize()|h}">
+        ${csrf_hidden_input()}
+	    <div class="spl-prompt-message-wrapper">
+<!--
+	        <h3 class="spl-main-description-hdr">
+	            ${_('Upload an app')}
+	        </h3>
+-->
+
+            % if requireAppInspect:
+                <p class="spl-main-description spl-dotted-border-bottom" data-test-name="login-directions">
+                    ${_('To install your app, complete each section on this page.')}<br/>
+                </p>
+                <h3 class="spl-page-hdr" style="padding: 10px 0px 0px;">
+                    <span> ${_('Login')} </span>
+                </h3>
+                <p class="spl-main-description spl-dotted-border-bottom" data-test-name="login-directions">
+                    ${_('Enter your Splunk.com username and password.')}<br/>
+                </p>
+                <div class="adminFormItem" data-test-name="form-username">
+                    <label>
+                        ${_('Username')}
+                    </label>
+                    <input type="text" value="" size="30" name="sbuser" />
+                </div>
+                <div class="adminFormItem" data-test-name="form-password" style="padding: 0px 0px 10px;">
+                    <label>
+                        ${_('Password')}
+                    </label>
+                    <input type="password" value="" size="30" name="sbpass" />
+                </div>
+                <h3 class="spl-page-hdr" style="padding: 10px 0px 0px;">
+                    <span> ${_('Validate app')} </span>
+                </h3>
+                <p class="spl-main-description spl-dotted-border-bottom" data-test-name="login-directions">
+                    ${_('Confirm that your app meets Splunk Cloud requirements using Spunk AppInspect.')}
+                    <a
+                        href="${generateSelfHelpLink('learnmore.appinspect.api')}"
+                        target="_blank"
+                        class="spl-icon-external-link-xsm"
+                        title="${_('Splunk help')}"
+                    >
+                        ${_("Learn more.")}
+                    </a>
+                </p>
+                <h3 class="spl-page-hdr" style="padding: 10px 0px 0px;">
+                    <span> ${_('Upload file')} </span>
+                </h3>
+            % endif
+	        <p class="spl-main-description spl-dotted-border-bottom">
+	           ${_('If you have a .spl or .tar.gz app file to install, you can upload it using this form.')}<br/>
+	        </p>
+	        <p class="spl-main-description spl-dotted-border-bottom">
+	            ${_('You can replace an existing app via the Splunk CLI.')} <a href="${generateSelfHelpLink('appinstall.upload.existing')}" target="_blank" class="spl-icon-external-link-xsm" title="${_('Splunk help')}">${_("Learn more.")}</a>
+            </p>
+	        <div class="adminFormItem">
+	            <label for="appfile">
+	                ${_('File')}
+	            </label>
+	            <input type="file" value="" size="30" name="appfile" id="appfile" />
+	        </div>
+            <div style="padding: 0px 0px 10px;">
+	            <input type="checkbox" name="force" value="0" id="force" onclick="$(this).is(':checked') ? $(this).val(1) : $(this).val(0);" />
+                <label for="force">${_('Upgrade app. Checking this will overwrite the app if it already exists.')}</label>
+            </div>
+            % if requireAppInspect:
+                <h3 class="spl-page-hdr" style="padding: 10px 0px 0px;">
+                    <span> ${_('Acknowledge terms')} </span>
+                </h3>
+                <p class="spl-main-description spl-dotted-border-bottom" >
+                    ${_('Before you can install your app, you must acknowledge the following installation terms:')}<br/>
+                </p>
+                <div style="padding: 20px 20px 20px 20px;">
+                    <p class="spl-main-description spl-dotted-border-bottom" style="font-size: small;">
+                        ${_('I acknowledge that Splunk is not responsible for the '
+                            'installation or use of any application that is not a '
+                            'supported Splunk application and Splunk specifically '
+                            'disclaims the accuracy, integrity, quality, legality, '
+                            'usefulness or security of such application or its use. '
+                            'Installation and use of an application that is not a '
+                            'supported Splunk application is at your own risk. '
+                            'Please note that if data leaves Splunk Cloud as a '
+                            'result of installing or using such application, '
+                            'Splunk’s security attestations do not apply to data'
+                            ' outside Splunk Cloud.')}
+                        <a
+                            href="${generateSelfHelpLink('learnmore.private_apps')}"
+                            target="_blank"
+                            class="spl-icon-external-link-xsm"
+                            title="${_('Splunk help')}"
+                        >
+                            ${_('Learn more about installing private apps')}
+                        </a>
+                        <br/>
+                    </p>
+                </div>
+                <div style="padding: 0px 0px 20px;">
+                    <input class="ack-checkbox" type="checkbox" name="ack" value="0" id="ack" />
+                    <label for="ack">${_('Acknowledged')}</label>
+                </div>
+            % endif
+	    </div>
+	</div>
+
+    <!-- Start button bar -->
+    <div class="jmFormActions splClearfix">
+        
+        % if requireAppInspect:
+            <button type="submit" class="splButton-primary" disabled>
+                <span>${_('Install')}</span>
+            </button>
+        % else:
+            <button type="submit" class="splButton-primary" >
+                <span>${_('Upload')}</span>
+            </button> 
+        % endif
+        % if state['return_to']:
+            <a class="splButton-secondary" href="#">
+                <span>${_('Cancel')}</span>
+            </a>
+        % endif
+    </div>
+    </form>
+</div>
+

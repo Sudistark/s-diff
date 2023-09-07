@@ -1,0 +1,54 @@
+.dataset-listings {
+    .shared-datasetcontrols-details {
+        width: 60%;
+    }
+}
+
+.shared-datasetcontrols-details {
+    display: flex;
+    align-items: flex-start;
+}
+
+.half {
+    display: flex;
+    flex-flow: row;
+    flex-wrap: wrap;
+    width: 400px;
+    overflow: visible;
+    margin: 0 20px 0 0;
+}
+
+.half.fields {
+    flex-flow: column;
+    height: 100px;
+    flex-basis: 0;
+    flex-wrap: wrap;
+
+    dt {
+        flex: 0 1 100%;
+    }
+
+    dd {
+        margin-left: 50px;
+        overflow: visible;
+        flex: 0;
+    }
+}
+
+dt {
+    flex: 0 0 30%;
+    text-overflow: ellipsis;
+    overflow: hidden;
+}
+
+dt::after {
+    content: ":";
+}
+
+dd {
+    margin-left: auto;
+    text-align: left;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    flex: 0 0 70%
+}

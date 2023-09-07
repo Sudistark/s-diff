@@ -1,0 +1,20 @@
+.exportButtonContainer {
+    display: inline-block;
+}
+
+.thirdGroup {
+    & li>a {
+        color: #DC4E41;
+    }
+    & li>a:hover {
+        color: #DC4E41;
+    }
+}
+
+.newLabel {
+    color: #006EAA;
+    font-weight: 500;
+    padding-right: 5px;
+    float: right;
+    letter-spacing: 1px;
+}
