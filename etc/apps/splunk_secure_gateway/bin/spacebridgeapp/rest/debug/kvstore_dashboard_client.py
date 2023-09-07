@@ -6,6 +6,8 @@ REST endpoint handler for kvstore dashboard client
 """
 
 import base64
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import sys
 import json
 from http import HTTPStatus

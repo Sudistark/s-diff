@@ -6,6 +6,8 @@ Modular input which periodically goes and deletes old alerts from KV Store
 import sys
 from spacebridgeapp.util import py23
 from splunk.clilib.bundle_paths import make_splunkhome_path
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from spacebridgeapp.util.base_modular_input import BaseModularInput
 from spacebridgeapp.util.splunk_utils.common import modular_input_should_run

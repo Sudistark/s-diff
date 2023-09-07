@@ -10,6 +10,8 @@ import json
 import base64
 from splunk.persistconn.application import PersistentServerConnectionApplication
 from splunk.clilib.bundle_paths import make_splunkhome_path
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from spacebridgeapp.util.splunk_utils.common import get_current_context
 

@@ -5,7 +5,8 @@ import pickle
 import asyncio
 
 warnings.filterwarnings('ignore', '.*service_identity.*', UserWarning)
-
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import fileinput
 import sys
 from cloudgateway.device import EncryptionKeys

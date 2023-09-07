@@ -4,6 +4,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 Hosts APIs for listing one or more JSON formatted DashboardDescriptions.
 """
 import sys
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 
 from splunk.clilib.bundle_paths import make_splunkhome_path

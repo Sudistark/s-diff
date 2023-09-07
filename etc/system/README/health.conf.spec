@@ -1,4 +1,4 @@
-#   Version 8.2.11.2
+#   Version 8.2.12
 #
 # This file sets the default thresholds for Splunk Enterprise's built
 # in Health Report.

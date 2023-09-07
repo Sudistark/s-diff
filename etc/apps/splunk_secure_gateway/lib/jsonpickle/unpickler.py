@@ -6,7 +6,7 @@
 # you should have received as part of this distribution.
 from __future__ import absolute_import, division, unicode_literals
 
-import quopri
+import dataclasses
 import sys
 import warnings
 
@@ -34,9 +34,12 @@ def decode(
 
     The keyword argument 'classes' defaults to None.
     If set to a single class, or a sequence (list, set, tuple) of classes,
-    then the classes will be made available when constructing objects.  This
-    can be used to give jsonpickle access to local classes that are not
-    available through the global module import scope.
+    then the classes will be made available when constructing objects.
+    If set to a dictionary of class names to class objects, the class object
+    will be provided to jsonpickle to deserialize the class name into.
+    This can be used to give jsonpickle access to local classes that are not
+    available through the global module import scope, and the dict method can
+    be used to deserialize encoded objects into a new class.
 
     The keyword argument 'safe' defaults to False.
     If set to True, eval() is avoided, but backwards-compatible
@@ -173,7 +176,11 @@ def loadclass(module_and_name, classes=None):
         try:
             return classes[module_and_name]
         except KeyError:
-            pass
+            # maybe they didn't provide a fully qualified path
+            try:
+                return classes[module_and_name.rsplit('.', 1)[-1]]
+            except KeyError:
+                pass
     # Otherwise, load classes from globally-accessible imports
     names = module_and_name.split('.')
     # First assume that everything up to the last dot is the module name,
@@ -366,6 +373,9 @@ class Unpickler(object):
         if isinstance(classes, (list, tuple, set)):
             for cls in classes:
                 self.register_classes(cls)
+        elif isinstance(classes, dict):
+            for cls in classes.values():
+                self.register_classes(cls)
         else:
             self._classes[util.importable_name(classes)] = classes
 
@@ -374,10 +384,6 @@ class Unpickler(object):
 
     def _restore_base85(self, obj):
         return util.b85decode(obj[tags.B85].encode('utf-8'))
-
-    #: For backwards compatibility with bytes data produced by older versions
-    def _restore_quopri(self, obj):
-        return quopri.decodestring(obj[tags.BYTES].encode('utf-8'))
 
     def _refname(self):
         """Calculates the name of the current location in the JSON stack.
@@ -513,9 +519,6 @@ class Unpickler(object):
         except IndexError:
             return _IDProxy(self._objs, idx)
 
-    def _restore_ref(self, obj):
-        return self._namedict.get(obj[tags.REF])
-
     def _restore_type(self, obj):
         typeref = loadclass(obj[tags.TYPE], classes=self._classes)
         if typeref is None:
@@ -614,10 +617,28 @@ class Unpickler(object):
                     continue
             else:
                 if not k.startswith('__'):
-                    setattr(instance, k, value)
+                    try:
+                        setattr(instance, k, value)
+                    except KeyError:
+                        # certain numpy objects require us to prepend a _ to the var
+                        # this should go in the np handler but I think this could be
+                        # useful for other code
+                        setattr(instance, f"_{k}", value)
+                    except dataclasses.FrozenInstanceError:
+                        # issue #240
+                        # i think this is the only way to set frozen dataclass attrs
+                        object.__setattr__(instance, k, value)
+                    except AttributeError as e:
+                        # some objects may raise this for read-only attributes (#422)
+                        if (
+                            hasattr(instance, "__slots__")
+                            and not len(instance.__slots__)
+                            and issubclass(instance.__class__, int)
+                        ):
+                            continue
+                        raise e
                 else:
-                    # we can use f-strings once we drop < 3.7 in jsonpickle 3.0
-                    setattr(instance, "_" + instance.__class__.__name__ + k, value)
+                    setattr(instance, f"_{instance.__class__.__name__}{k}", value)
 
             # This instance has an instance variable named `k` that is
             # currently a proxy and must be replaced
@@ -809,6 +830,9 @@ class Unpickler(object):
                 self._namestack.pop()
         return data
 
+    def _restore_tuple(self, obj):
+        return tuple([self._restore(v) for v in obj[tags.TUPLE]])
+
     def _restore_tags(self, obj):
         try:
             if not tags.RESERVED <= set(obj) and not type(obj) in (list, dict):
@@ -820,31 +844,27 @@ class Unpickler(object):
         except TypeError:
             pass
         if type(obj) is dict:
-            if has_tag_dict(obj, tags.TUPLE):
+            if tags.TUPLE in obj:
                 restore = self._restore_tuple
-            elif has_tag_dict(obj, tags.SET):
+            elif tags.SET in obj:
                 restore = self._restore_set
-            elif has_tag_dict(obj, tags.B64):
+            elif tags.B64 in obj:
                 restore = self._restore_base64
-            elif has_tag_dict(obj, tags.B85):
+            elif tags.B85 in obj:
                 restore = self._restore_base85
-            elif has_tag_dict(obj, tags.ID):
+            elif tags.ID in obj:
                 restore = self._restore_id
-            elif has_tag_dict(obj, tags.ITERATOR):
+            elif tags.ITERATOR in obj:
                 restore = self._restore_iterator
-            elif has_tag_dict(obj, tags.OBJECT):
+            elif tags.OBJECT in obj:
                 restore = self._restore_object
-            elif has_tag_dict(obj, tags.TYPE):
+            elif tags.TYPE in obj:
                 restore = self._restore_type
-            elif has_tag_dict(obj, tags.REDUCE):
+            elif tags.REDUCE in obj:
                 restore = self._restore_reduce
-            elif has_tag_dict(obj, tags.FUNCTION):
+            elif tags.FUNCTION in obj:
                 restore = self._restore_function
-            elif has_tag_dict(obj, tags.BYTES):  # Backwards compatibility
-                restore = self._restore_quopri
-            elif has_tag_dict(obj, tags.REF):  # Backwards compatibility
-                restore = self._restore_ref
-            elif has_tag_dict(obj, tags.REPR):  # Backwards compatibility
+            elif tags.REPR in obj:  # Backwards compatibility
                 restore = self._restore_repr
             else:
                 restore = self._restore_dict
@@ -856,6 +876,3 @@ class Unpickler(object):
                 return x
 
         return restore
-
-    def _restore_tuple(self, obj):
-        return tuple([self._restore(v) for v in obj[tags.TUPLE]])

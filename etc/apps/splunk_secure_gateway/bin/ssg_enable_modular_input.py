@@ -9,11 +9,11 @@ import warnings
 warnings.filterwarnings('ignore', '.*service_identity.*', UserWarning)
 
 import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 from splunk.clilib.bundle_paths import make_splunkhome_path
 from spacebridgeapp.util import py23
 
 py23.suppress_insecure_https_warnings()
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from spacebridgeapp.util.base_modular_input import BaseModularInput
 from spacebridgeapp.logging import setup_logging

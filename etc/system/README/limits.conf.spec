@@ -1,4 +1,4 @@
-#   Version 8.2.11.2
+#   Version 8.2.12
 #
 ############################################################################
 # OVERVIEW
@@ -1767,6 +1767,20 @@ maxbins = <integer>
 * If 'maxbins' is not specified or = 0, 'maxbins' uses the value set for
   'maxresultrows' in the [searchresults] stanza, which is 50000 by default.
 * Default: 50000
+
+
+[eval]
+printf_max_precision = <non-negative integer>
+* The maximum usable precision for 'printf' format strings.
+* Default: 1000000
+* NOTE: Do not change this setting unless instructed to do so by Splunk
+  Support.
+
+printf_max_width = <integer>
+* The maximum usable width for 'printf' format strings.
+* Default: 1000000
+* NOTE: Do not change this setting unless instructed to do so by Splunk
+  Support.
 
 
 [findkeywords]

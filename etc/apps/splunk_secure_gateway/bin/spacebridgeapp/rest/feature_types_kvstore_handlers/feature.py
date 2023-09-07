@@ -3,7 +3,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 
 REST endpoint handler for managing app types in the kvstore, and their enabled/disabled state
 """
-
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import sys
 import json
 from splunk.persistconn.application import PersistentServerConnectionApplication

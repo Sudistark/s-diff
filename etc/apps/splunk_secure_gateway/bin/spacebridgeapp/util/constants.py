@@ -304,6 +304,7 @@ ALL_USERS = "all"
 VALID_TOKEN_NAME = "ar.assetID"
 VALID_CHART_TYPES = ('fillerGauge', 'radialGauge', 'markerGauge')
 PAYLOAD = 'payload'
+PAYLOAD_B64 = 'payload_base64'
 STATUS = 'status'
 
 ACTION = 'action'

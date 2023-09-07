@@ -1,5 +1,3 @@
-#! /usr/bin/env python
-#
 # Protocol Buffers - Google's data interchange format
 # Copyright 2008 Google Inc.  All rights reserved.
 # https://developers.google.com/protocol-buffers/
@@ -41,10 +39,7 @@ further ensures that we can use Python protocol message objects as we expect.
 
 __author__ = 'robinson@google.com (Will Robinson)'
 
-try:
-  import unittest2 as unittest  #PY26
-except ImportError:
-  import unittest
+import unittest
 
 from google.protobuf.internal import test_bad_identifiers_pb2
 from google.protobuf import unittest_custom_options_pb2
@@ -300,11 +295,21 @@ class GeneratorTest(unittest.TestCase):
     self.assertEqual(
         nested_names,
         set([field.name for field in desc.oneofs[0].fields]))
-    for field_name, field_desc in list(desc.fields_by_name.items()):
+    for field_name, field_desc in desc.fields_by_name.items():
       if field_name in nested_names:
         self.assertIs(desc.oneofs[0], field_desc.containing_oneof)
       else:
         self.assertIsNone(field_desc.containing_oneof)
+
+  def testEnumWithDupValue(self):
+    self.assertEqual('FOO1',
+                     unittest_pb2.TestEnumWithDupValue.Name(unittest_pb2.FOO1))
+    self.assertEqual('FOO1',
+                     unittest_pb2.TestEnumWithDupValue.Name(unittest_pb2.FOO2))
+    self.assertEqual('BAR1',
+                     unittest_pb2.TestEnumWithDupValue.Name(unittest_pb2.BAR1))
+    self.assertEqual('BAR1',
+                     unittest_pb2.TestEnumWithDupValue.Name(unittest_pb2.BAR2))
 
 
 class SymbolDatabaseRegistrationTest(unittest.TestCase):

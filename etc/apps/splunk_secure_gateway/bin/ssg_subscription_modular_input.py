@@ -10,10 +10,10 @@ warnings.filterwarnings('ignore', '.*service_identity.*', UserWarning)
 
 import multiprocessing
 import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 from spacebridgeapp.util import py23
 
 py23.suppress_insecure_https_warnings()
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 import asyncio
 from spacebridgeapp.rest.clients.async_kvstore_client import AsyncKvStoreClient

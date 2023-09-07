@@ -3,10 +3,15 @@
 """Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved."""
 # Splunk specific dependencies
 import sys
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from splunk.clilib.bundle_paths import make_splunkhome_path
-from spacebridgeapp.util import py23
 
+
+from spacebridgeapp.util import py23, constants
+
+from spacebridgeapp.logging import setup_logging
 import asyncio
 from cloudgateway.private.asyncio.clients.aio_client import AioHttpClient
 from spacebridgeapp.util.config import secure_gateway_config as config

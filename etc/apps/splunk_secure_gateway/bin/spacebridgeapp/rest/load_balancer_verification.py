@@ -3,6 +3,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 
 REST endpoint handler for accessing and setting kvstore records
 """
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 import splunk.rest as rest
 from spacebridgeapp.logging import setup_logging

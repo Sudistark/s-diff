@@ -3,6 +3,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 
 REST endpoint handler for Splunk Cloud Gateway migration to Splunk Secure Gateway
 """
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import sys
 import json
 from splunk.persistconn.application import PersistentServerConnectionApplication

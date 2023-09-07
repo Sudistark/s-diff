@@ -30,6 +30,8 @@ splunk stop command line command. You will have to manually kill the process wit
     kill -9 <process IDs from the previous command>
 """
 import sys
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from splunk.clilib.bundle_paths import make_splunkhome_path
 sys.path.append(make_splunkhome_path(['etc', 'apps', 'splunk_secure_gateway', 'bin']))

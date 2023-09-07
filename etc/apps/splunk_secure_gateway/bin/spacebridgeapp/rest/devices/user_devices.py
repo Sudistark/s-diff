@@ -4,6 +4,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 REST endpoint handler for getting the devices in the kvstore belonging to a specific user
 """
 
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import base64
 import json
 import sys

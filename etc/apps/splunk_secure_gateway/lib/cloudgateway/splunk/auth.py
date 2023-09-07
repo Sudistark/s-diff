@@ -1,22 +1,24 @@
-from cloudgateway.private.util.tokens_util import calculate_token_info
-from splunk import rest as rest
-
 import json
-import base64
 import requests
+
 from cloudgateway.auth import SimpleUserCredentials, UserAuthCredentials
 from cloudgateway.private.util import constants
+from cloudgateway.private.util.tokens_util import calculate_token_info
 from cloudgateway.private.util.http_status import HTTPStatus
 from spacebridge_protocol import http_pb2
 
-NOT_BEFORE = "+0d"
-EXPIRES_ON = "+30d"
+try:
+    from splunk import rest as rest
+except ImportError:
+    pass
+
 
 class SplunkAuthHeader(object):
     """
     Wrapper for a splunk session token. Returns a splunk auth header when stringified
     to be used on HTTP requests to Splunk's REST apis
     """
+
     def __init__(self, session_token):
         self.session_token = session_token
 
@@ -24,7 +26,7 @@ class SplunkAuthHeader(object):
         return 'Splunk {0}'.format(self.session_token)
 
     def validate(self, async_splunk_client):
-       raise NotImplementedError
+        raise NotImplementedError
 
 
 class SplunkBasicCredentials(SimpleUserCredentials):
@@ -47,7 +49,7 @@ class SplunkJWTCredentials(UserAuthCredentials):
         self.token = None
         self.token_id = None
 
-    def load_jwt_token(self, system_auth_header, audience=constants.CLOUDGATEWAY):
+    def load_jwt_token(self, system_auth_header, audience=constants.CLOUDGATEWAY, jwt_expiration=constants.EXPIRES_ON):
         """
         Creates a new JWT token for the given user
 
@@ -57,7 +59,7 @@ class SplunkJWTCredentials(UserAuthCredentials):
         :return: JWT token for given user
         """
         url = self.jwt_token_url()
-        data = self.jwt_token_data(self.username, audience)
+        data = self.jwt_token_data(self.username, audience, jwt_expiration)
 
         headers = {
             constants.HEADER_CONTENT_TYPE: constants.APPLICATION_JSON,
@@ -88,12 +90,12 @@ class SplunkJWTCredentials(UserAuthCredentials):
     def get_token_type(self):
         return http_pb2.TokenType.Value('JWT')
 
-    def jwt_token_data(self, username, audience):
+    def jwt_token_data(self, username, audience, jwt_expiration):
         return {
             "name": username,
-            "not_before": NOT_BEFORE,
+            "not_before": constants.NOT_BEFORE,
             "audience": audience,
-            "expires_on": EXPIRES_ON
+            "expires_on": jwt_expiration
         }
 
     def get_credentials(self):
@@ -102,7 +104,6 @@ class SplunkJWTCredentials(UserAuthCredentials):
             'token': self.token,
             'type': constants.JWT_TOKEN_TYPE
         })
-
 
 
 def authenticate_splunk_credentials(username, password):
@@ -131,4 +132,3 @@ def authenticate_splunk_credentials(username, password):
         exception.msg = 'Error: unable to authenticate client'
 
     raise exception
-

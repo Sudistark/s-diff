@@ -33,10 +33,10 @@ class AioSplunkJWTMDMCredentials(SplunkJWTCredentials):
         self.token = None
         self.async_client = AioHttpClient()
 
-    async def load_jwt_token(self, system_auth, audience=constants.CLOUDGATEWAY):
-        self.token = await self.fetch_jwt_token_from_session_key(self.username, system_auth, audience)
+    async def load_jwt_token(self, system_auth, audience=constants.CLOUDGATEWAY, jwt_expiration=constants.EXPIRES_ON):
+        self.token = await self.fetch_jwt_token_from_session_key(self.username, system_auth, audience, jwt_expiration)
 
-    async def fetch_jwt_token_from_session_key(self, username, system_auth_header, audience):
+    async def fetch_jwt_token_from_session_key(self, username, system_auth_header, audience, jwt_expiration):
         """
         Creates a new JWT token for the given user
 
@@ -46,7 +46,7 @@ class AioSplunkJWTMDMCredentials(SplunkJWTCredentials):
         :return: JWT token for given user
         """
         url = self.jwt_token_url()
-        data = self.jwt_token_data(username, audience)
+        data = self.jwt_token_data(username, audience, jwt_expiration)
 
         headers = {
             constants.HEADER_CONTENT_TYPE: constants.APPLICATION_JSON,

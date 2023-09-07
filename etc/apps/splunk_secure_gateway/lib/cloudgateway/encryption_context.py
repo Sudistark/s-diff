@@ -5,13 +5,16 @@
 import sys
 from cloudgateway import py23
 import base64
+from typing import Any, Callable, TypeVar
 from cloudgateway.private.util.constants import SIGN_PUBLIC_KEY, SIGN_PRIVATE_KEY, ENCRYPT_PUBLIC_KEY, \
-        ENCRYPT_PRIVATE_KEY
+    ENCRYPT_PRIVATE_KEY
 from cloudgateway.private.util.sdk_mode import SdkMode
 from base64 import b64encode, b64decode
 from cloudgateway.private.encryption.encryption_handler import encrypt_session_token
 from cloudgateway.private.sodium_client import SodiumClient
 from cloudgateway.device import EncryptionKeys
+
+T = TypeVar("T")
 
 
 def generate_keys():
@@ -27,19 +30,19 @@ def generate_keys():
 
 
 class EncryptionContext(object):
-    """Base class for encryption which provides utilities such as  
+    """Base class for encryption which provides utilities such as
     getters for the public and private keys for encryption and signing. Does not offer
     any out of the box mechanism for persisting keys. Sub classes such as
     SplunkEncryptionContext can provide specific implementations for persistence
-    depending on the persistence mechanism. 
+    depending on the persistence mechanism.
     """
 
     def __init__(self, encryption_keys, sodium_client=None):
         """
         Args:
             encryption_keys ([EncryptionKeys]): User must generate encryption keys using the
-            generate_keys method and provide keys in the context. It's up the user to 
-            persist the keys themselves between sessions. 
+            generate_keys method and provide keys in the context. It's up the user to
+            persist the keys themselves between sessions.
             sodium_client ([type], optional): [description]. Defaults to None.
         """
 
@@ -55,15 +58,15 @@ class EncryptionContext(object):
         """Getter for encryption keys
 
         Returns:
-            [EncryptionKeys]: Wrapper object. Also the same object that the constructor expects. 
-            The user should persist this object and load it into the constructor on future sessions. 
+            [EncryptionKeys]: Wrapper object. Also the same object that the constructor expects.
+            The user should persist this object and load it into the constructor on future sessions.
         """
         return EncryptionKeys(self._key_cache[SIGN_PUBLIC_KEY],
                               self._key_cache[SIGN_PRIVATE_KEY],
                               self._key_cache[ENCRYPT_PUBLIC_KEY],
                               self._key_cache[ENCRYPT_PRIVATE_KEY])
 
-    def __noop(input):
+    def __noop(input: T) -> T:
         return input
 
     def generichash_hex(self, input):
@@ -73,10 +76,10 @@ class EncryptionContext(object):
         else:
             return raw.hex()
 
-    def generichash_raw(self, input):
+    def generichash_raw(self, input) -> bytes:
         return self.sodium_client.hash_generic(input)
 
-    def sign_public_key(self, transform=__noop):
+    def sign_public_key(self, transform: Callable[[Any], T] = __noop) -> T:
         """
         :param transform: a function to transform the public key into another representation, default noop
         :return: Signing public key from KV Store. Requires key to have been generated.  This is the splApp's
@@ -122,3 +125,6 @@ class EncryptionContext(object):
         ciphertext = encrypt_session_token(self.sodium_client, session_token, public_key, private_key)
         return base64.b64encode(ciphertext)
 
+    @property
+    def client_id(self) -> str:
+        return self.sign_public_key(transform=self.generichash_hex)

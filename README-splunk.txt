@@ -1,6 +1,6 @@
 
-Splunk 8.2.11.2
-July, 2023
+Splunk 8.2.12
+August, 2023
 Splunk Enterprise is the data collection, indexing, and visualization engine for operational intelligence.
 
 Splunk online documentation is located at:

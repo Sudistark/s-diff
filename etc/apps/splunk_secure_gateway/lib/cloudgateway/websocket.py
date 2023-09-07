@@ -79,7 +79,7 @@ class ServerResponse(object):
 
 class CloudGatewayWsClient(object):
     def __init__(self, encryption_context, message_handler, logger=None, mode=WebsocketMode.THREADED,
-                 config=SplunkConfig(), shard_id=None, websocket_context=None, key_bundle=None):
+                 config=SplunkConfig(), shard_id=None, websocket_context=None, key_bundle=None, device_info=None):
         """
 
         Args:
@@ -90,6 +90,7 @@ class CloudGatewayWsClient(object):
             logger: Optional logger parameter for logging purposes
             mode: [WebsocketMode] Enum specifying either threaded mode or async mode. Defaults to Threaded mode
             config: Optional [CloudgatewaySdkConfig] configuration class
+            device_info: Optional [DeviceInfo] information for device observability
         """
         self.encryption_context = encryption_context
         self.logger = logger or DummyLogger()
@@ -99,7 +100,7 @@ class CloudGatewayWsClient(object):
         self.config = config
         self.shard_id = shard_id
         self.key_bundle = key_bundle
-
+        self.device_info = device_info
         if self.mode == WebsocketMode.THREADED:
             websocket_mode = constants.THREADED_MODE
 
@@ -134,7 +135,8 @@ class CloudGatewayWsClient(object):
                                                mode=websocket_mode,
                                                shard_id=self.shard_id,
                                                websocket_context=websocket_context,
-                                               key_bundle=self.key_bundle
+                                               key_bundle=self.key_bundle,
+                                               device_info=device_info
                                                )
 
     def connect(self, threadpool_size=None):
@@ -181,7 +183,8 @@ class CloudGatewayWsClient(object):
             return requests.post(sb_message_endpoint(self.config),
                                  headers=spacebridge_header,
                                  data=send_message_request.SerializeToString(),
-                                 cert=cert.name
+                                 cert=cert.name,
+                                 proxies=self.config.get_proxies()
                                  )
 
 

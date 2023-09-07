@@ -9,10 +9,10 @@ warnings.filterwarnings('ignore', '.*service_identity.*', UserWarning)
 
 import sys
 import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 from splunk.clilib.bundle_paths import make_splunkhome_path
 from spacebridgeapp.util import py23
 
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from solnlib import modular_input
 from spacebridgeapp.util.base_modular_input import BaseModularInput

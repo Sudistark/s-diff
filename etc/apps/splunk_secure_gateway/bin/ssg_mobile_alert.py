@@ -7,6 +7,7 @@ a mobile alert is triggered.
 
 import sys
 import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import warnings
 import time
 from base64 import b64decode
@@ -15,7 +16,6 @@ warnings.filterwarnings('ignore', '.*service_identity.*', UserWarning)
 
 from spacebridgeapp.util import py23
 
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 
 import splunk.rest as rest
@@ -57,6 +57,9 @@ from spacebridgeapp.util.constants import SUBJECT, SEVERITY, CALL_TO_ACTION_URL,
     ALERT_TIMESTAMP_FIELD, ALERT_DASHBOARD_ID, DASHBOARD_TOGGLE, ALERT_ID, ALERT_MESSAGE, ALERT_SUBJECT, \
     CONFIGURATION, SAVED_SEARCH_RESULT, SESSION_KEY, RESULTS_LINK, SEARCH_ID, OWNER, APP_NAME, SEARCH_NAME, \
     ATTACH_DASHBOARD_TOGGLE, ATTACH_TABLE_TOGGLE, TOKEN, FIELDNAME, RESULT, USER
+
+from spacebridgeapp.rest.devices.alert_helper import send_push_notification
+
 
 from spacebridgeapp.logging import setup_logging
 
@@ -136,8 +139,8 @@ async def do_trigger(alert_payload):
                                         async_kvstore_client)
         LOGGER.info("persist_recipient_devices ok alert_id=%s", alert_id)
         LOGGER.info("send_push_notifications starting registered_devices=%s", len(registered_devices))
-        await send_push_notifications(
-            request_context, alert.notification, registered_devices, async_kvstore_client, async_spacebridge_client,
+        await send_push_notification(
+            LOGGER, request_context, alert.notification, registered_devices, async_kvstore_client, async_spacebridge_client,
             async_splunk_client)
 
 
@@ -282,101 +285,6 @@ async def should_send(request_context: RequestContext,
             return False
 
     return True
-
-
-async def send_push_notifications(request_context,
-                                  notification,
-                                  recipient_devices,
-                                  async_kvstore_client,
-                                  async_spacebridge_client,
-                                  async_splunk_client):
-    """
-    Given a notification object and a list of device ids, sends a post request to the Spacebridge notifications
-    api for each device id
-    :param request_context:
-    :param notification: notification object to be sent
-    :param recipient_devices: list of device id strings
-    :param async_kvstore_client: AsyncKVStoreClient
-    :param async_spacebridge_client: AsyncSpacebridgeClient
-    :param async_splunk_client: AsyncSpacebridgeClient
-    :return:
-    """
-
-    sodium_client = SodiumClient(LOGGER.getChild('sodium_client'))
-    sign_keys_response = await async_splunk_client.async_get_sign_credentials(request_context.auth_header)
-
-    if sign_keys_response[0] == HTTPStatus.OK:
-
-        encryption_keys = EncryptionKeys(b64decode(sign_keys_response[1]['sign_public_key']),
-                                         b64decode(sign_keys_response[1]['sign_private_key']), None, None)
-        encryption_context = EncryptionContext(encryption_keys, sodium_client)
-
-    else:
-        LOGGER.exception("Unable to fetch encryption keys with error_code=%s", str(sign_keys_response[0]))
-        raise EncryptionKeyError(sign_keys_response[1], sign_keys_response[0])
-
-    sender_id = encryption_context.sign_public_key(transform=encryption_context.generichash_raw)
-    sender_id_hex = py23.encode_hex_str(sender_id)
-
-    headers = {'Content-Type': 'application/x-protobuf', 'Authorization': sender_id_hex}
-    deferred_responses = []
-
-    signer = partial(sign_detached, sodium_client, encryption_context.sign_private_key())
-
-    for device_id_str in recipient_devices:
-        device_id = device_id_str.encode('utf-8')
-        device_id_raw = b64decode(device_id)
-
-        try:
-            if not await should_send(request_context, async_kvstore_client, notification, device_id_str):
-                continue
-
-            _, receiver_encrypt_public_key = await public_keys_for_device(device_id_raw,
-                                                                          request_context.auth_header,
-                                                                          async_kvstore_client)
-
-            encryptor = partial(encrypt_for_send,
-                                sodium_client,
-                                receiver_encrypt_public_key)
-
-            LOGGER.info("Sending notification alert_id=%s, device_id=%s", notification.alert_id, device_id)
-            notification_request = notifications.build_notification_request(device_id, device_id_raw, sender_id,
-                                                                            notification,
-                                                                            encryptor, signer)
-
-            # Send post request asynchronously
-            deferred_responses.append(async_spacebridge_client.async_send_notification_request(
-                auth_header=SpacebridgeAuthHeader(sender_id),
-                data=notification_request.SerializeToString(),
-                headers=headers))
-
-        except KeyNotFoundError:
-            LOGGER.info("Public key not found for device_id=%s", device_id)
-        except SodiumOperationError:
-            LOGGER.warn("Sodium operation failed! device_id=%s", device_id)
-
-    # Wait until all the post requests have returned
-    responses = await asyncio.gather(*deferred_responses, return_exceptions=True)
-
-    successes = []
-    exceptions = []
-
-    # Convert device set to list for indexing while parsing responses
-    recipient_devices_list = list(recipient_devices)
-
-    # Parse responses and split up exceptions from successful results
-    for i in range(len(responses)):
-        if isinstance(responses[i], Exception):
-            exceptions.append((recipient_devices[i], responses[i]))
-        else:
-            code = responses[i].code
-            msg = await responses[i].text()
-            successes.append((recipient_devices_list[i], code, msg))
-
-    LOGGER.info("Finished sending push notifications with responses=%s", str(successes))
-
-    if exceptions:
-        LOGGER.error("Encountered exceptions sending pushing notifications to devices=%s", str(exceptions))
 
 
 # Helper object for Dashboard objects which can be returned in deferred

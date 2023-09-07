@@ -43,14 +43,14 @@ class TxSplunkJWTMDMCredentials(SplunkJWTCredentials):
         self.async_client = AsyncClient()
 
     @defer.inlineCallbacks
-    def load_jwt_token(self, system_auth, audience=constants.CLOUDGATEWAY):
+    def load_jwt_token(self, system_auth, audience=constants.CLOUDGATEWAY, jwt_expiration=constants.EXPIRES_ON):
         if self.password:
-            self.token = yield self.fetch_jwt_token_from_basic_creds(self.username, self.password, audience)
+            self.token = yield self.fetch_jwt_token_from_basic_creds(self.username, self.password, audience, jwt_expiration)
         else:
-            self.token = yield self.fetch_jwt_token_from_session_key(self.username, system_auth, audience)
+            self.token = yield self.fetch_jwt_token_from_session_key(self.username, system_auth, audience, jwt_expiration)
 
     @defer.inlineCallbacks
-    def fetch_jwt_token_from_basic_creds(self, username, password, audience):
+    def fetch_jwt_token_from_basic_creds(self, username, password, audience, jwt_expiration):
         """
         Creates a new JWT token for the given user
 
@@ -61,7 +61,7 @@ class TxSplunkJWTMDMCredentials(SplunkJWTCredentials):
         """
 
         url = self.jwt_token_url()
-        data = self.jwt_token_data(username, audience)
+        data = self.jwt_token_data(username, audience, jwt_expiration)
 
         headers = {constants.HEADER_CONTENT_TYPE: constants.APPLICATION_JSON}
 
@@ -75,7 +75,7 @@ class TxSplunkJWTMDMCredentials(SplunkJWTCredentials):
         defer.returnValue(response['entry'][0]['content']['token'])
 
     @defer.inlineCallbacks
-    def fetch_jwt_token_from_session_key(self, username, system_auth_header, audience):
+    def fetch_jwt_token_from_session_key(self, username, system_auth_header, audience, jwt_expiration):
         """
         Creates a new JWT token for the given user
 
@@ -85,7 +85,7 @@ class TxSplunkJWTMDMCredentials(SplunkJWTCredentials):
         :return: JWT token for given user
         """
         url = self.jwt_token_url()
-        data = self.jwt_token_data(username, audience)
+        data = self.jwt_token_data(username, audience, jwt_expiration)
 
         headers = {
             constants.HEADER_CONTENT_TYPE: constants.APPLICATION_JSON,

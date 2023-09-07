@@ -8,6 +8,8 @@ import sys
 import json
 from splunk.persistconn.application import PersistentServerConnectionApplication
 from splunk.clilib.bundle_paths import make_splunkhome_path
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 sys.path.append(make_splunkhome_path(['etc', 'apps', 'splunk_secure_gateway', 'bin']))
 from spacebridgeapp.util import py23

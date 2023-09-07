@@ -32,7 +32,30 @@ def submit_auth_code(auth_code, encryption_context, config, key_bundle=None):
             raise RestException.CloudgatewayServerError('Unable to reach cloudgateway: {0}'.format(e), 503)
 
 
+def is_mdm_signature_valid(payload, mdm_signing_public_key, encryption_context):
+    """
+    Attempt to verify mdm signature with the given mdm_signing_public_key, and return boolean
+    indicating whether or not verification was succesful
+    """
+    mdm_bundle = payload.serializedMdmVerificationBundle
+    signature = payload.mdmVerificationBundleSignature
+
+    if not mdm_signing_public_key or not mdm_bundle or not signature:
+        return False
+    
+    try:
+        return sign_verify(encryption_context.sodium_client, mdm_signing_public_key, mdm_bundle,
+                                         signature)
+    except SodiumOperationError as e:
+        # Invalid MDM Signature
+        return False
+
+
 def verify_mdm_signature(payload, mdm_signing_public_key, encryption_context):
+    """
+    Verify the given mdm signature with the given mdm_signing_public_key. Throws exception
+    if signature is invalid or does not match.
+    """
     mdm_bundle = payload.serializedMdmVerificationBundle
     signature = payload.mdmVerificationBundleSignature
 

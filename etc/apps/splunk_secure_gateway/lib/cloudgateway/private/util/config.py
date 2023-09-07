@@ -5,8 +5,6 @@ Configuration utility
 """
 
 import base64
-import os
-from enum import Enum
 from abc import ABCMeta, abstractmethod
 
 from cloudgateway.private.util.constants import DEFAULT_HTTP_PORT, DEFAULT_HTTPS_PORT
@@ -104,6 +102,10 @@ class CloudgatewaySdkConfig(object):
         return 'https://' + self.get_spacebridge_server()
 
     @abstractmethod
+    def get_spacebridge_grpc_server(self):
+        raise NotImplementedError
+
+    @abstractmethod
     def get_https_proxy(self):
         raise NotImplementedError
 
@@ -121,7 +123,6 @@ class CloudgatewaySdkConfig(object):
 
 
 class SplunkConfig(CloudgatewaySdkConfig):
-
     """
     Splunk specific configuration parsing. Fetches proxy info from server.conf
     """
@@ -131,13 +132,26 @@ class SplunkConfig(CloudgatewaySdkConfig):
     SPACEBRIDGE_SERVER = 'spacebridge_server'
 
     # Config defaults
-    DEFAULT_SPACEBRIDGE_SERVER = "prod.spacebridge.spl.mobi"
+    DEFAULT_SPACEBRIDGE_SERVER = "http.us-east-1.spacebridge.splunkcx.com"
+    DEFAULT_SPACEBRIDGE_DISCOVERY_SERVER = "http.us-east-1.spacebridge.splunkcx.com"
+    DEFAULT_SPACEBRIDGE_GRPC_SERVER = "grpc.us-east-1.spacebridge.splunkcx.com:443"
 
-    def __init__(self, spacebridge_server=DEFAULT_SPACEBRIDGE_SERVER):
+    def __init__(self,
+                 spacebridge_server=DEFAULT_SPACEBRIDGE_SERVER,
+                 spacebridge_discovery_server=DEFAULT_SPACEBRIDGE_DISCOVERY_SERVER,
+                 spacebridge_grpc_server=DEFAULT_SPACEBRIDGE_GRPC_SERVER):
         self.spacebridge_server = spacebridge_server
+        self.spacebridge_discovery_server = spacebridge_discovery_server
+        self.spacebridge_grpc_server = spacebridge_grpc_server
 
     def get_spacebridge_server(self):
         return self.spacebridge_server
+
+    def get_spacebridge_discovery_server(self):
+        return self.spacebridge_discovery_server
+
+    def get_spacebridge_grpc_server(self):
+        return self.spacebridge_grpc_server
 
     def get_https_proxy(self):
         try:
@@ -178,5 +192,3 @@ class SplunkConfig(CloudgatewaySdkConfig):
         :return:
         """
         return parse_proxy_settings(self.get_https_proxy(), DEFAULT_HTTPS_PORT)
-
-

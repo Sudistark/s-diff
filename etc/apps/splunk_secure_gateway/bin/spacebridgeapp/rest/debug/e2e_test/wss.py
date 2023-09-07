@@ -5,6 +5,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 Initiates websocket connection used for end to end test
 """
 
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import base64
 import sys
 import json

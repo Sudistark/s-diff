@@ -1,4 +1,4 @@
-#   Version 8.2.11.2
+#   Version 8.2.12
 #
 # This is an example eventdiscoverer.conf.  These settings are used to control
 # the discovery of common eventtypes used by the typelearner search command.

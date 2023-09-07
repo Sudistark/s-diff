@@ -6,6 +6,9 @@ import json
 import sys
 import time
 import splunk
+from typing import Dict
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from splunk.clilib.bundle_paths import make_splunkhome_path
 from splunk.persistconn.application import PersistentServerConnectionApplication

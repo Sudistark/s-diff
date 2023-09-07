@@ -3,6 +3,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 
 REST endpoint handler for reading oia value
 """
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import sys
 import splunk
 from http import HTTPStatus

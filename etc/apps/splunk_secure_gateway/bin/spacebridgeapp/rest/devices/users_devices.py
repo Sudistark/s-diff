@@ -2,6 +2,9 @@
 Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 """
 
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
+
 import sys
 from functools import reduce
 

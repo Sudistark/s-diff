@@ -6,6 +6,7 @@ REST handler for companion apps to register with Splunk Secure Gateway
 import base64
 import json
 import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import sys
 from http import HTTPStatus
 from splunk.clilib.bundle_paths import make_splunkhome_path
@@ -23,7 +24,6 @@ from spacebridgeapp.logging import setup_logging
 
 LOGGER = setup_logging(constants.SPACEBRIDGE_APP_NAME + ".log", "rest_registration_query")
 
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 # Constants
 FRIENDLY_NAME = 'friendly_name'

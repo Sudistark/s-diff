@@ -3,6 +3,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 
 Hosts APIs for CRUD operations on subscriptions
 """
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import sys
 import json
 import splunk

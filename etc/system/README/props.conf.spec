@@ -1,4 +1,4 @@
-#   Version 8.2.11.2
+#   Version 8.2.12
 #
 # This file contains possible setting/value pairs for configuring Splunk
 # software's processing properties through props.conf.
@@ -1477,6 +1477,21 @@ unarchive_cmd = <string>
   software, such as on a forwarder that has configured inputs acquiring the
   data.
 * Default: empty string
+
+unarchive_cmd_start_mode = [direct|shell]
+* Determines how the Splunk platform runs the "unarchive_cmd" command.
+* A value of "direct" means that the Splunk daemon runs the 'unarchive_cmd' command
+  directly, and does not use a command shell. In this case, the Splunk daemon attempts
+  to run the first 'unarchive_cmd' value that you specify as a command. Any subsequent
+  values in the 'unarchive_cmd' are interpreted as the command's arguments.
+  * When this setting has a value of "direct", command shell operators such
+    as '&&' or ';' in the "unarchive_cmd" value cannot be used and will cause
+    unexpected results. If you need to run multiple commands consecutively or
+    conditionally using command shell syntax, give this setting a value of
+    "shell" instead.
+* A value of "shell" means that a shell process runs the "unarchive_cmd" commands.
+  This allows for execution of a command pipeline that consists of multiple commands.
+* Default: shell
 
 unarchive_sourcetype = <string>
 * Sets the source type of the contents of the matching archive file. Use

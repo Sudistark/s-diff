@@ -3,7 +3,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 
 REST endpoint handler for restarting SSG modular inputs
 """
-
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import sys
 from splunk.persistconn.application import PersistentServerConnectionApplication
 from splunk.clilib.bundle_paths import make_splunkhome_path

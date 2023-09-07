@@ -11,6 +11,7 @@ import warnings
 import logging
 import asyncio
 import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from spacebridgeapp.util import py23
 from spacebridgeapp.util.mtls import build_mtls_spacebridge_client, build_key_bundle
@@ -18,7 +19,6 @@ from spacebridgeapp.util.mtls import build_mtls_spacebridge_client, build_key_bu
 py23.suppress_insecure_https_warnings()
 warnings.filterwarnings('ignore', '.*service_identity.*', UserWarning)
 
-os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 from cloudgateway.websocket import CloudGatewayWsClient, WebsocketMode, AbstractWebsocketContext
 from cloudgateway.private.sodium_client.sharedlib_sodium_client import SodiumClient

@@ -71,8 +71,11 @@ else:
 # ensure nothing dangerous
 # keep this rule in agreement with etc/system/default/restmap.conf for sane UI
 # experience in manager when editing alerts (SPL-49225)
-if ".." in script or "/" in script or "\\" in script:
-    results = splunk.Intersplunk.generateErrorResults('Script location cannot contain "..", "/", or "\\"')
+disallowed = ('..', '/', '\\', ':')
+if any(i in script for i in disallowed):
+    display_string = ', '.join(['"{}"'.format(i) for i in disallowed[:-1]])
+    msg = 'Script location cannot contain {}, or "{}"'.format(display_string, disallowed[-1])
+    results = splunk.Intersplunk.generateErrorResults(msg)
 else:
 
     # look for scripts first in the app's bin/scripts/ dir, if that fails try SPLUNK_HOME/bin/scripts

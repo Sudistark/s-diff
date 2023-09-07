@@ -5,11 +5,14 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 import os
 
 os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
+import logging
+from http import HTTPStatus
 from spacebridge_protocol import http_pb2
 from spacebridge_protocol import sb_common_pb2
 from splapp_protocol import envelope_pb2
 from splapp_protocol import common_pb2
 from spacebridgeapp.util import constants
+from spacebridgeapp.exceptions.splunk_api_exceptions import HTTPException
 
 TTL_SECONDS = 259200
 
@@ -30,10 +33,29 @@ def build_notification_request(device_id, device_id_raw, sender_id, notification
     """
 
     LOGGER.info("Building notification alert_id=%s, device_id=%s" % (notification.alert_id, device_id))
-    return build_notification(notification, device_id_raw, sender_id, encrypt, sign)
+    unsigned_notification = build_notification(notification, device_id_raw, sender_id, encrypt)
+    unsigned_notification.signedEnvelope.signature = sign(unsigned_notification.signedEnvelope.serialized)
+    return unsigned_notification
 
 
-def build_notification(notification, recipient, sender, encrypt, sign):
+async def async_build_notification_request(log: logging.Logger,
+                               device_id, device_id_raw, sender_id, notification, encrypt, async_sign_payload):
+
+    log.info("Building notification alert_id=%s, device_id=%s" % (notification.alert_id, device_id))
+    unsigned_notification = build_notification(notification, device_id_raw, sender_id, encrypt)
+    r = await async_sign_payload(unsigned_notification.signedEnvelope.serialized)
+    if r.code != HTTPStatus.OK:
+        response_text = await r.text()
+        raise HTTPException(f'Failed to generate valid signature with error={response_text}', r.code)
+    
+    # Unfortunately for binary responses, aiohttp doesn't have a method to return the raw output with no encoding
+    # so we have to access the content body directly
+    unsigned_notification.signedEnvelope.signature = r._body
+    return unsigned_notification
+
+
+
+def build_notification(notification, recipient, sender, encrypt):
     """
     Takes a notification object and a recipient id and builds the corresponding SendNotificationRequest proto
     object which will be posted to Spacebridge
@@ -53,15 +75,18 @@ def build_notification(notification, recipient, sender, encrypt, sign):
 
     payload = encrypt(splapp_notification.SerializeToString())
 
-    build_signed_envelope(send_notification_request.signedEnvelope, payload, recipient, sender, sign)
+    build_unsigned_envelope(send_notification_request.signedEnvelope, payload, recipient, sender)
 
     return send_notification_request
 
 
-def build_signed_envelope(signed_envelope, message, recipient, sender, sign):
+def build_unsigned_envelope(signed_envelope, message, recipient, sender):
     """
     Takes a signed envelope, a serialized message payload and a recipient and then populates the signed envelope
     with sender, recipient fields as well as setting the message payload.
+
+    Important: Does not generate signature because method for signature generation 
+    depends on context has access to sign private key
 
     :param signed_envelope: SendNotificationRequest.signedEnvelope proto
     :param message: envelope.NotificationMessage Proto
@@ -74,10 +99,8 @@ def build_signed_envelope(signed_envelope, message, recipient, sender, sign):
     notification_message.payload = message
 
     serialized = notification_message.SerializeToString()
-    signature = sign(serialized)
 
     signed_envelope.messageType = sb_common_pb2.SignedEnvelope.MESSAGE_TYPE_NOTIFICATION_MESSAGE
-    signed_envelope.signature = signature
     signed_envelope.serialized = serialized
 
 

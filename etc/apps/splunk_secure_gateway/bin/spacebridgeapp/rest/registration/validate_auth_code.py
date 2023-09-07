@@ -3,7 +3,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 
 REST endpoint handler for the first part of  Spacebridge registration process: validating an auth code
 """
-
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import sys
 import json
 from splunk.persistconn.application import PersistentServerConnectionApplication

@@ -507,3 +507,22 @@ class AsyncSplunkClient(AsyncNonSslClient):
 
         params = {'output_mode': 'json'}
         return self.async_post_request(uri=uri, auth_header=auth_header, data=form_data_jsn, params=params)
+
+    def subscribe_report_notification(self, auth_header:str, report_id:str, log):
+        uri = f'{self.uri}services/ssg/notifications/reports/subscribe'
+
+        form_data = json.dumps({ 'id': report_id})
+        return self.async_post_request(uri, auth_header, data=form_data,  params={'output_mode': 'json'})
+
+    def unsubscribe_report_notification(self, auth_header:str, report_id:str, log):
+        uri = f'{self.uri}services/ssg/notifications/reports/unsubscribe'
+
+        form_data = json.dumps({ 'id': report_id})
+        return self.async_post_request(uri, auth_header, data=form_data,  params={'output_mode': 'json'})
+
+
+    def sign_payload(self, auth_header:str, payload:str):
+        """ Send payload to signing endpoint to receive signature """
+        uri = f'{self.uri}services/ssg/sign_payload'
+
+        return self.async_post_request(uri, auth_header, data=payload,  params={'output_mode': 'json'})

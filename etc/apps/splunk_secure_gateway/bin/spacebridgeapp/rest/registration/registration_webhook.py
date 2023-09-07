@@ -3,6 +3,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 
 Helper methods for validating a registration against a webhook api
 """
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 import requests
 from http import HTTPStatus
 from spacebridgeapp.rest.util import errors

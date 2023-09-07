@@ -6,3 +6,11 @@ class EncryptionKeyError(Exception):
 
     def __str__(self):
         return "status=%s %s" % (self.http_code, self.message)
+
+class HTTPException(Exception):
+    def __init__(self, message, status):
+        self.message = f"HTTP Exception with error message={message}"
+        self.status = status
+
+    def __str__(self):
+        return f"{self.message}, status={self.status}"

@@ -4,6 +4,8 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 REST endpoint handler for checking if a dashboard is compatible with mobile apps, based
 on the dashboard_id
 """
+import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
 
 import sys
 from splunk.persistconn.application import PersistentServerConnectionApplication

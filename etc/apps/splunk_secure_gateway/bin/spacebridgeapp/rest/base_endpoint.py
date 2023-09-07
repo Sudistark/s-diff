@@ -4,8 +4,9 @@ Copyright (C) 2009-2021 Splunk Inc. All Rights Reserved.
 Generic base class from which all custom Splunk-facing rest endpoints inherit. Generalizes
 support for http methods, and abstracts out repetitive boilerplate and error-parsing logic
 """
-import json
 import os
+os.environ['PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION'] = 'python'
+import json
 import sys
 import splunk
 
